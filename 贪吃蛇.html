@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<script>
+			window.onload=function(){
+				
+				var canv =document.getElementById('canves2');
+				var ctx =canv.getContext("2d");
+				var score=0;				
+				//Block构造函数,参数行，列，坐标
+				var Block=function(col,row,size){
+					this.col=col;
+					this.row=row;
+					this.size=size;
+				}			
+				//构造函数的draw的原型
+				//原型方法：为同一类的对象定义构造函数的通用方法，关键字prototype
+				Block.prototype.draw=function(){
+					ctx.fillRect(this.col*this.size,this.row*this.size,this.size,this.size)
+				}			
+				//创建snake对象，包含两个键值对body和direction
+//				body为创建方块对象,
+//				direction为运动方向
+				var snake={
+					body:[
+						new Block(20,20,10),
+						new Block(20,21,10),
+						new Block(20,22,10)
+					],					
+					direction:"right"
+				}				
+				//创建苹果对象，三个键值对：横纵位置和大小（半径）
+				//floor取整，random随机数
+				var apple={
+					posX:Math.floor(Math.random()*40),
+					posY:Math.floor(Math.random()*40),
+					sizeR:5
+				}			
+				//draw方法，绘制每个方块
+				snake.draw=function(){
+					for (var i=0;i<this.body.length;i++) {
+						this.body[i].draw();
+					}
+				}
+				//绘制苹果的fraw方法
+				apple.draw=function	() {
+					ctx.fillStyle='red';
+					ctx.beginPath();
+					ctx.arc((this.posX*2+1)*this.sizeR,(this.posY*2+1)*this.sizeR,
+					this.sizeR,0,Math.PI*2,false);
+					ctx.fill();
+					ctx.fillStyle='black';
+				}			
+				//设置定时器，使其运动
+				var timer=setInterval(function(){
+					ctx.clearRect(0,0,400,400);
+					//文本相对坐标的位置
+					ctx.textBaseline='top';
+					//文本的字体大小和字体样式
+					ctx.font='20px Arial'
+					//文本显示方法：参数：文本内容，坐标（文字左下角的坐标）
+					ctx.fillText('Score:'+score,5,15);
+					snake.draw();
+					snake.move();
+					apple.draw();
+					ctx.strokeRect(0,0,400,400);
+				},200)
+				
+				//move方法
+				
+//				创建一个head变量,保存蛇头的对象
+//				根据运动方向创建新的对象,改变方向
+//				通过unshift方法把新对象添加到数组中
+//				通过pop方法删除最后一个对象
+				snake.move=function(){
+					var head=this.body[0];
+					
+					if (snake.direction=='right') {
+						var newhead=new Block(head.col+1,head.row,head.size);						
+					}
+					if (snake.direction=='left') {
+						var newhead=new Block(head.col-1,head.row,head.size);						
+					}
+					if (snake.direction=='up') {
+						var newhead=new Block(head.col,head.row-1,head.size);						
+					}
+					if (snake.direction=='down') {
+						var newhead=new Block(head.col,head.row+1,head.size);						
+					}
+					
+					this.body.unshift(newhead);
+					//加入碰撞判断，判断贪吃蛇的头部方块是否出界，游戏结束
+					//画布为40x40的10x10的小格子组成，所以判断是否超出39个小格子
+					if (newhead.col<0||newhead.col>39) {
+						clearInterval(timer);
+						gameOver();
+					}
+					if (newhead.row<0||newhead.row>39) {
+						clearInterval(timer);
+						gameOver();
+					}
+//					定义一个布尔值变量checkApple,来判断苹果是否在贪吃蛇身上
+//					生成一个新的苹果,通过循环判断方块重合,改变变量checkApple
+//					判断checkApple依然为false(未重合),跳出循环,否则生成新的苹果直至新苹果未重合
+					if (newhead.col==apple.posX&&newhead.row==apple.posY) {
+						score=score+100;
+						while(true){
+							var checkApple=false;
+							
+							apple.posX=Math.floor(Math.random()*40);
+							apple.posY=Math.floor(Math.random()*40);
+							for (var i = 0; i < this.body.length; i++) {
+								if (this.body[i].col==apple.posX&&this.body[i].row==apple.posY) {
+									checkApple=true;
+								}
+							}
+							if (!checkApple) {
+								break;
+							}
+							
+						}
+						
+					}else{
+						this.body.pop();
+					}	
+				}
+				
+				//贪吃蛇的控制
+//				添加键盘交互事件,通过方向键控制运动方向
+//				注意:运动方向不能反向
+				document.onkeydown=function(ev){
+					var oEvent=ev||event;
+					var keyCode = oEvent.keyCode;
+//					console.log(keyCode);
+
+					if(keyCode==37&&snake.direction!='right'){
+						snake.direction='left';
+					}
+					if(keyCode==38&&snake.direction!='down'){
+						snake.direction='up';
+					}
+					if(keyCode==39&&snake.direction!='left'){
+						snake.direction='right';
+					}
+					if(keyCode==40&&snake.direction!='up'){
+						snake.direction='down';
+					}
+				}			
+				//游戏结束函数
+				var gameOver=function(){
+					//alert('aa');
+					ctx.font='60px Comic Sans MS';
+					ctx.fillStyle='red';
+					ctx.textAlign='center';
+					ctx.textBaseline='middle';
+					ctx.fillText('GAME OVER',200,200);
+					//ctx.fillStyle='black';
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<canvas id="canves2" width="400px" height="400px"></canvas>
+	</body>
+</html>
